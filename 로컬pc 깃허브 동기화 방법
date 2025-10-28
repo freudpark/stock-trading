@@ -1,0 +1,136 @@
+✦ GitHub 저장소 생성 및 로컬 폴더 동기화 상세 가이드 (최종)
+
+  이 가이드는 로컬 PC의 프로젝트 폴더를 GitHub 저장소와 연결하고 코드를 관리하는 모든 과정을 처음부터 끝까지 안내합니다.
+
+  전제 조건:
+   * 로컬 PC에 Git이 설치되어 있어야 합니다.
+   * GitHub 계정이 있어야 합니다.
+
+  ---
+
+  1단계: Git 설치
+
+   * Windows용 Git 다운로드:
+       * 웹 브라우저를 열고 Git for Windows 공식 웹사이트 (https://git-scm.com/download/win)에 접속합니다.
+       * 최신 버전의 Git 설치 파일을 다운로드합니다.
+   * 설치 진행:
+       * 다운로드한 설치 파일을 실행합니다.
+       * 설치 마법사의 지시에 따라 대부분의 옵션은 기본값으로 두고 'Next'를 클릭하여 설치를 완료합니다. (특별한 경우가 아니라면 기본
+         설정을 유지하는 것이 좋습니다.)
+   * 설치 확인:
+       * 명령 프롬프트(또는 PowerShell)를 열고 git --version을 입력했을 때 Git 버전 정보가 표시되면 설치가 성공한 것입니다.
+
+  ---
+
+  2단계: 로컬 프로젝트 폴더 준비
+
+   * 로컬 PC의 D:\park-ai 디렉토리 내에 stock-trading이라는 프로젝트 폴더가 이미 생성되어 있으며, 이 폴더 안에 자동매매 시스템
+     파일들이 준비되어 있다고 가정합니다.
+
+  ---
+
+  3단계: 로컬 Git 저장소 초기화 및 `.gitignore` 파일 생성
+
+   1. 명령 프롬프트(Windows) 또는 터미널(macOS/Linux) 열기:
+       * Windows 검색에서 cmd 또는 PowerShell을 검색하여 실행합니다.
+   2. 프로젝트 폴더로 이동:
+       * 아래 명령어를 입력하고 Enter 키를 눌러 stock-trading 폴더로 이동합니다.
+
+   1     cd D:\park-ai\stock-trading
+   3. Git 저장소 초기화:
+       * 아래 명령어를 입력하고 Enter 키를 눌러 현재 폴더를 Git 저장소로 만듭니다.
+   1     git init
+   4. `.gitignore` 파일 생성 및 설명:
+       * `.gitignore` 파일이란?
+           * Git에게 "이 파일이나 폴더는 버전 관리에서 제외해줘"라고 알려주는 설정 파일입니다.
+           * 예를 들어, 프로그램이 실행되면서 생성되는 임시 파일, 로그 파일, 빌드 결과물, IDE 설정 파일, 그리고 보안상 중요한 API 키
+             등이 담긴 .env 파일 등은 Git 저장소에 포함할 필요가 없습니다.
+       * `.gitignore`를 사용하는 이유:
+           * 불필요한 파일 제외: 저장소를 깔끔하게 유지하고, 용량을 줄입니다.
+           * 보안: 민감한 정보(API 키, 비밀번호 등)가 실수로 GitHub 같은 공개 저장소에 올라가는 것을 방지합니다.
+           * 협업: 팀원들이 각자의 개발 환경에서 생성되는 임시 파일들 때문에 Git 충돌이 발생하는 것을 막아줍니다.
+       * 파일 생성 방법:
+           * 로컬 PC의 D:\park-ai\stock-trading 폴더를 엽니다.
+           * 이 폴더 안에 `.gitignore` 라는 이름의 새 텍스트 파일을 만듭니다. (파일 확장자 없이 .gitignore로 저장해야 합니다.)
+           * .gitignore 파일을 텍스트 편집기(예: 메모장, VS Code)로 열고, 줄 번호 없이 아래 내용을 복사하여 붙여넣은 후 저장합니다.
+----------------------------------------------------
+   Python
+  __pycache__/
+  *.pyc
+  *.pyo
+  *.pyd
+  .Python
+  venv/
+  .venv/
+  env/
+  .env/
+
+  Node.js
+  node_modules/
+  npm-debug.log*
+  yarn-debug.log*
+  yarn-error.log*
+  .pnp/
+  .pnp.js
+
+  OS generated files
+  .DS_Store
+  .Trashes
+  Thumbs.db
+
+  IDEs
+  .vscode/
+  .idea/
+
+  Environment variables
+  .env
+  .env.local
+  .env.development.local
+  .env.test.local
+  .env.production.local
+
+  ---
+
+  4단계: 로컬 파일 Git에 추가 및 첫 번째 커밋 생성
+
+   1. 명령 프롬프트(또는 터미널)로 돌아와서, 아래 명령어를 순서대로 실행합니다.
+   1     git add .
+       * 설명: 이 명령은 현재 폴더의 모든 파일(.gitignore에 의해 무시되는 파일 제외)을 Git이 추적하도록 준비합니다.
+       * 참고: LF will be replaced by CRLF 경고는 Windows 환경에서 흔히 발생하는 줄바꿈 문자 관련 경고이며, 커밋에는 문제가 없습니다.
+   2. 다음 명령어를 실행하여 첫 번째 커밋을 생성합니다.
+   1     git commit -m "Initial commit: Setup stock trading system project structure"
+       * `git commit` 이란? git add로 준비된 변경 사항들을 Git 저장소에 영구적으로 기록하는 명령어입니다. 프로젝트의 특정 시점 상태를
+          사진 찍어 보관하는 것과 같습니다.
+       * `-m "..."` 이란? -m은 message의 약자로, 따옴표 안의 내용이 이 커밋에 대한 설명 메시지가 됩니다. "Initial commit"은 첫 번째
+         커밋에 대한 관례적인 메시지입니다.
+       * 참고: git commit 후 텍스트 편집기(주로 Vim)가 열릴 수 있습니다. 기본 메시지를 그대로 두고 Vim은 Esc -> :wq -> Enter, Nano는
+         Ctrl+X -> Y -> Enter로 저장 후 닫으세요.
+
+  ---
+
+  5단계: GitHub에 원격 저장소 연결 및 코드 푸시
+
+   1. GitHub 저장소 페이지 열기:
+       * 웹 브라우저를 열고 GitHub (https://github.com/)에 로그인합니다.
+       * 사용자님의 freudpark/stock-trading 저장소 페이지로 이동합니다. (예: https://github.com/freudpark/stock-trading)
+   2. 원격 저장소 연결 명령어 복사:
+       * 저장소 페이지에서 Code 버튼을 클릭합니다.
+       * HTTPS 탭을 선택합니다.
+       * URL (예: https://github.com/freudpark/stock-trading.git) 옆의 복사 버튼을 클릭하여 URL을 복사합니다.
+   3. 로컬 저장소에 원격 연결:
+       * 명령 프롬프트(또는 터미널)로 돌아와서, 아래 명령어를 실행합니다. (복사한 URL을 YOUR_REPOSITORY_URL 대신 붙여넣으세요.)
+   1     git remote add origin YOUR_REPOSITORY_URL
+   2     # 예시: git remote add origin https://github.com/freudpark/stock-trading.git
+       * 설명: 이 명령은 로컬 Git 저장소에 origin이라는 이름으로 GitHub의 원격 저장소 주소를 등록합니다.
+   4. GitHub의 변경 사항 가져오기 (필수):
+       * GitHub 저장소에 이미 파일이 존재하므로, 먼저 원격의 변경 사항을 로컬로 가져와 병합해야 합니다.
+   1     git pull origin main --allow-unrelated-histories
+       * 설명: git pull은 원격 저장소의 최신 내용을 로컬로 가져와 병합하는 명령어입니다. --allow-unrelated-histories는 로컬과 원격
+         저장소의 시작점이 다를 때 병합을 허용하는 옵션입니다.
+       * 참고: 이 명령 후 텍스트 편집기(주로 Vim)가 열릴 수 있습니다. 기본 메시지를 그대로 두고 Vim은 Esc -> :wq -> Enter, Nano는
+         Ctrl+X -> Y -> Enter로 저장 후 닫으세요.
+   5. 로컬 코드 GitHub로 푸시:
+       * 이제 로컬의 코드를 GitHub 저장소로 푸시합니다.
+   1     git push -u origin main
+       * 설명: git push는 로컬 저장소의 변경 사항을 원격 GitHub 저장소로 업로드하는 명령어입니다. -u origin main은 로컬 main 브랜치가
+          origin의 main 브랜치를 추적하도록 설정하고 푸시합니다.
