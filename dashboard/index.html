@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 주식 자동 매매 관제 센터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body{background:#0f172a;color:#f8fafc;font-family:sans-serif;}</style>
+</head>
+<body class="p-4 md:p-6 max-w-5xl mx-auto space-y-4">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-800 p-4 rounded-xl border border-slate-700 gap-3">
+        <div>
+            <h1 class="text-xl font-bold text-blue-400">📊 AI 주식 자동 매매 관제 센터</h1>
+            <p class="text-xs text-slate-400">Multi-AI (MBD → Codex → Claude Code) 실시간 파이프라인</p>
+        </div>
+        <button id="mBtn" onclick="fetch('/api/toggle',{method:'POST'}).then(()=>location.reload())" class="px-4 py-2 bg-amber-600 font-bold rounded-lg text-sm shadow">
+            수동 승인 모드 (MANUAL)
+        </button>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-slate-800 p-3 rounded-lg border border-slate-700"><div class="text-xs text-slate-400">총 평가 자산</div><div class="text-lg font-bold text-white mt-0.5">10,540,000원</div></div>
+        <div class="bg-slate-800 p-3 rounded-lg border border-slate-700"><div class="text-xs text-slate-400">예수금</div><div class="text-lg font-bold text-blue-400 mt-0.5">4,200,000원</div></div>
+        <div class="bg-slate-800 p-3 rounded-lg border border-slate-700"><div class="text-xs text-slate-400">당일 손익</div><div class="text-lg font-bold text-rose-400 mt-0.5">+540,000원</div></div>
+        <div class="bg-slate-800 p-3 rounded-lg border border-slate-700"><div class="text-xs text-slate-400">수익률</div><div class="text-lg font-bold text-rose-400 mt-0.5">+5.4%</div></div>
+    </div>
+    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+        <h2 class="text-sm font-bold text-slate-200">🤖 3단계 Multi-AI 분석 파이프라인</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="bg-slate-900 p-3 rounded-lg border border-slate-700"><span class="px-1.5 py-0.5 bg-blue-900 text-blue-300 rounded font-bold">1단계: MBD Free AI</span><p class="mt-1 text-slate-300">삼성전자 호재 뉴스 & 이평선 골든크로스</p></div>
+            <div class="bg-slate-900 p-3 rounded-lg border border-slate-700"><span class="px-1.5 py-0.5 bg-purple-900 text-purple-300 rounded font-bold">2단계: Codex Engine</span><p class="mt-1 text-slate-300">목표가 74,500원 검증, 리스크 1.2%</p></div>
+            <div class="bg-slate-900 p-3 rounded-lg border border-slate-700"><span class="px-1.5 py-0.5 bg-amber-900 text-amber-300 rounded font-bold">3단계: Claude Code</span><p class="mt-1 text-slate-300">1·2차 검증 완료. 20주 매수 승인 요청</p></div>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+            <h2 class="text-sm font-bold text-amber-400">⚡ 매매 실행 승인 요청</h2>
+            <div class="bg-slate-900 p-3 rounded-lg border border-amber-500/40 text-xs space-y-2">
+                <div>종목: <b class="text-white">삼성전자 (005930)</b></div>
+                <div>주문: <b class="text-emerald-400">지정가 매수 / 20주</b> (단가: 74,500원)</div>
+                <div class="pt-2 flex gap-2">
+                    <button onclick="fetch('/api/approve',{method:'POST'}).then(r=>r.json()).then(d=>{alert(d.msg);location.reload()})" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow">✅ 승인 (주문 전송)</button>
+                    <button onclick="fetch('/api/reject',{method:'POST'}).then(r=>r.json()).then(d=>{alert(d.msg);location.reload()})" class="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg shadow">❌ 반려 (취소)</button>
+                </div>
+            </div>
+        </div>
+        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2">
+            <h2 class="text-sm font-bold text-slate-200">📜 실시간 관제 로그</h2>
+            <div class="bg-slate-950 p-3 rounded-lg font-mono text-[11px] text-slate-300 h-36 overflow-y-auto space-y-1">
+                <div>[09:01] 시스템 초기화 완료 - 토스증권 API 연결</div>
+                <div>[09:02] [1단계 MBD] 실시간 뉴스 및 시세 수집 완료</div>
+                <div>[09:03] [2단계 Codex] 퀀트 변동성 돌파 정밀 검증</div>
+                <div class="text-amber-400">[09:03] [3단계 Claude] 최종 매수 시그널 도출 -> 사용자 승인 대기</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        fetch('/api/state').then(r=>r.json()).then(d=>{
+            const b = document.getElementById('mBtn');
+            if(d.mode==='AUTO'){b.innerText='완전 자동 모드 (AUTO)';b.className='px-4 py-2 bg-emerald-600 font-bold rounded-lg text-sm shadow';}
+        });
+    </script>
+</body>
+</html>
