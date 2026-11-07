@@ -29,8 +29,9 @@ def run_stage1_analysis(symbol="005930", stock_name="삼성전자"):
     "summary": "1~2줄 핵심 요약 내용"
 }}
 """
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent?key={API_KEY}"
-    headers = {"Content-Type": "application/json"}
+    # Key goes in a header, not the URL, so it never shows up in URLs, logs or tracebacks.
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
+    headers = {"Content-Type": "application/json", "x-goog-api-key": API_KEY}
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
@@ -70,7 +71,7 @@ def run_stage1_analysis(symbol="005930", stock_name="삼성전자"):
                 json.dump(res_json, f, ensure_ascii=False, indent=2)
             return res_json
         else:
-            return {"status": "ERROR", "message": f"API 오류 ({r.status_code}): {r.text}"}
+            return {"status": "ERROR", "message": f"API 오류 (HTTP {r.status_code})"}
     except Exception as e:
         print("DEBUG Raw Response Text:")
         print(repr(text) if 'text' in locals() else "text not defined")

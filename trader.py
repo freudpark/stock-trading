@@ -39,9 +39,10 @@ class AutoTrader:
             if resp.status_code == 200:
                 logging.info(f"✅ 주문 전송 성공 [{side}]: {symbol} {quantity}주")
                 return True, resp.json()
-            return False, f"주문 실패 (HTTP {resp.status_code}): {resp.text}"
+            # Do not echo the broker's response body: it can contain account details.
+            return False, f"주문 실패 (HTTP {resp.status_code})"
         except Exception as e:
-            return False, f"주문 통신 오류: {str(e)}"
+            return False, f"주문 통신 오류: {type(e).__name__}"
 
     def check_volatility_breakout(self, prev_high: float, prev_low: float, today_open: float, current_price: float):
         """

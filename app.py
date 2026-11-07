@@ -1,7 +1,12 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, abort
+from dotenv import load_dotenv
 import pandas as pd
 import json
 import os
+import hmac
+
+load_dotenv(os.path.expanduser("~/stock_bot/.env"))
+API_TOKEN = os.environ.get("DASHBOARD_TOKEN", "")
 
 # stock_selector.py에서 필요한 함수들을 import
 # 실제 환경에서는 모듈로 분리하여 import 해야 하지만, 여기서는 편의상 동일 파일에 있다고 가정
@@ -39,6 +44,18 @@ def run_stock_selection_prototype():
     return pd.DataFrame(data)
 
 app = Flask(__name__)
+
+
+@app.before_request
+def require_token():
+    """Every /api/* call (including n8n) needs the X-Dashboard-Token header."""
+    if not request.path.startswith("/api/"):
+        return None
+    sent = request.headers.get("X-Dashboard-Token", "")
+    if not API_TOKEN or not hmac.compare_digest(sent, API_TOKEN):
+        abort(401)
+    return None
+
 
 @app.route('/api/select_stocks', methods=['GET'])
 def select_stocks():
@@ -95,6 +112,8 @@ def execute_trade():
     return jsonify(trade_result)
 
 if __name__ == '__main__':
-    # 개발 서버 실행 (외부 접근을 위해 host='0.0.0.0' 설정)
-    # n8n에서 호출할 수 있도록 포트 5000을 사용
-    app.run(host='0.0.0.0', port=5000)
+    if not API_TOKEN:
+        raise SystemExit("DASHBOARD_TOKEN is not set in ~/stock_bot/.env; refusing to start.")
+    # Local-only by default. If n8n runs on another machine, set API_HOST=0.0.0.0
+    # and have n8n send the X-Dashboard-Token header.
+    app.run(host=os.environ.get("API_HOST", "127.0.0.1"), port=5000)

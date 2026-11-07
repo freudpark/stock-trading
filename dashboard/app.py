@@ -1,7 +1,23 @@
-from flask import Flask, jsonify
-import datetime, os
+from flask import Flask, jsonify, request, abort
+from dotenv import load_dotenv
+import datetime, os, hmac
+
+load_dotenv(os.path.expanduser("~/stock_bot/.env"))
+DASHBOARD_TOKEN = os.environ.get("DASHBOARD_TOKEN", "")
 
 app = Flask(__name__)
+
+
+@app.before_request
+def require_token():
+    """Every /api/* call needs the X-Dashboard-Token header to match DASHBOARD_TOKEN."""
+    if not request.path.startswith("/api/"):
+        return None
+    sent = request.headers.get("X-Dashboard-Token", "")
+    if not DASHBOARD_TOKEN or not hmac.compare_digest(sent, DASHBOARD_TOKEN):
+        abort(401)
+    return None
+
 state = {
     "mode": "MANUAL",
     "account": {"total": "10,540,000원", "cash": "4,200,000원", "profit": "+5.4%", "daily": "+540,000원"},
@@ -11,6 +27,7 @@ state = {
         "l": {"name": "3단계: Claude Code", "st": "승인 대기", "txt": "1·2차 검증 통과. 20주 매수 승인 요청"}
     },
     "order": {"name": "삼성전자 (005930)", "type": "지정가 매수 / 20주", "price": "74,500원 (총 149만원)"},
+    "git_validation": {"status": "AWS Claude 검사 중...", "last_sync": "방금 전"},
     "logs": ["[09:01] 시스템 초기화 완료 - 토스증권 API 연결", "[09:02] [1단계 MBD] 실시간 뉴스 및 시세 수집 완료", "[09:03] [2단계 Codex] 퀀트 변동성 돌파 정밀 검증", "[09:03] [3단계 Claude] 최종 매수 시그널 도출 -> 사용자 승인 대기"]
 }
 
@@ -48,4 +65,7 @@ def index():
         return f.read()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    if not DASHBOARD_TOKEN:
+        raise SystemExit("DASHBOARD_TOKEN is not set in ~/stock_bot/.env; refusing to start.")
+    # Local-only by default. Set DASHBOARD_HOST=0.0.0.0 only on a trusted network.
+    app.run(host=os.environ.get("DASHBOARD_HOST", "127.0.0.1"), port=8080)

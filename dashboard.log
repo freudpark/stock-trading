@@ -9,3 +9,4 @@ nohup: ignoring input
 127.0.0.1 - - [16/Aug/2026 03:01:58] "GET / HTTP/1.1" 200 -
 127.0.0.1 - - [16/Aug/2026 03:01:59] "GET /api/state HTTP/1.1" 200 -
 127.0.0.1 - - [16/Aug/2026 03:02:00] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+127.0.0.1 - - [20/Aug/2026 13:24:25] "[33mGET /ws HTTP/1.1[0m" 404 -

@@ -38,9 +38,9 @@ class TossInvestAPI:
                 data = resp.json()
                 self.access_token = data.get("access_token")
                 return True, "토큰 발급 성공"
-            return False, f"인증 실패 (HTTP {resp.status_code}): {resp.text}"
+            return False, f"인증 실패 (HTTP {resp.status_code})"
         except Exception as e:
-            return False, f"네트워크 통신 오류: {str(e)}"
+            return False, f"네트워크 통신 오류: {type(e).__name__}"
 
     def get_price(self, symbol: str):
         """국내/미국 주식 현재가 및 시세 정보 조회 (예: '005930', 'AAPL')"""
@@ -50,9 +50,9 @@ class TossInvestAPI:
             resp = requests.get(url, headers=self.get_headers(), params=params, timeout=10)
             if resp.status_code == 200:
                 return True, resp.json()
-            return False, f"조회 실패 (HTTP {resp.status_code}): {resp.text}"
+            return False, f"조회 실패 (HTTP {resp.status_code})"
         except Exception as e:
-            return False, f"통신 오류: {str(e)}"
+            return False, f"통신 오류: {type(e).__name__}"
 
     def get_balance(self):
         """계좌 예수금 및 보유 주식 잔고 조회"""
@@ -61,9 +61,9 @@ class TossInvestAPI:
             resp = requests.get(url, headers=self.get_headers(), timeout=10)
             if resp.status_code == 200:
                 return True, resp.json()
-            return False, f"잔고 조회 실패 (HTTP {resp.status_code}): {resp.text}"
+            return False, f"잔고 조회 실패 (HTTP {resp.status_code})"
         except Exception as e:
-            return False, f"통신 오류: {str(e)}"
+            return False, f"통신 오류: {type(e).__name__}"
 
 if __name__ == "__main__":
     print("[toss_api.py] 모듈 로드 완료. API 키 입력 대기 상태입니다.")

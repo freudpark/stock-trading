@@ -1,0 +1,15 @@
+{
+  "stage": "2단계: Codex Quant Engine",
+  "symbol": "005930",
+  "stock_name": "삼성전자",
+  "stage1_reference": "관망 추천",
+  "prev_high": 75000,
+  "prev_low": 72000,
+  "today_open": 73000,
+  "current_price": 74600,
+  "target_buy_price": 74500.0,
+  "is_breakout": true,
+  "downside_risk_pct": "3.49%",
+  "validation_status": "PASS",
+  "summary": "목표가 74,500원 돌파 확인(현재가 74,600원). 하방 리스크 3.49%로 검증 통과"
+}

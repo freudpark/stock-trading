@@ -12,7 +12,7 @@
             <h1 class="text-xl font-bold text-blue-400">📊 AI 주식 자동 매매 관제 센터</h1>
             <p class="text-xs text-slate-400">Multi-AI (MBD → Codex → Claude Code) 실시간 파이프라인</p>
         </div>
-        <button id="mBtn" onclick="fetch('/api/toggle',{method:'POST'}).then(()=>location.reload())" class="px-4 py-2 bg-amber-600 font-bold rounded-lg text-sm shadow">
+        <button id="mBtn" onclick="api('/api/toggle','POST').then(()=>location.reload())" class="px-4 py-2 bg-amber-600 font-bold rounded-lg text-sm shadow">
             수동 승인 모드 (MANUAL)
         </button>
     </div>
@@ -30,6 +30,19 @@
             <div class="bg-slate-900 p-3 rounded-lg border border-slate-700"><span class="px-1.5 py-0.5 bg-amber-900 text-amber-300 rounded font-bold">3단계: Claude Code</span><p class="mt-1 text-slate-300">1·2차 검증 완료. 20주 매수 승인 요청</p></div>
         </div>
     </div>
+    <div class="bg-slate-800 p-4 rounded-xl border border-blue-900/50 space-y-3">
+        <h2 class="text-sm font-bold text-blue-400">📡 AWS 원격 코드 검증 (GitHub 연동)</h2>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4 text-xs bg-slate-900 p-3 rounded-lg border border-slate-700">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="text-slate-300">최근 동기화: <b class="text-emerald-400" id="gitSyncTime">방금 전</b></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span class="text-slate-300">진행 상태: <b class="text-amber-400" id="gitValStatus">AWS Claude 검사 중...</b></span>
+            </div>
+        </div>
+    </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
             <h2 class="text-sm font-bold text-amber-400">⚡ 매매 실행 승인 요청</h2>
@@ -37,8 +50,8 @@
                 <div>종목: <b class="text-white">삼성전자 (005930)</b></div>
                 <div>주문: <b class="text-emerald-400">지정가 매수 / 20주</b> (단가: 74,500원)</div>
                 <div class="pt-2 flex gap-2">
-                    <button onclick="fetch('/api/approve',{method:'POST'}).then(r=>r.json()).then(d=>{alert(d.msg);location.reload()})" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow">✅ 승인 (주문 전송)</button>
-                    <button onclick="fetch('/api/reject',{method:'POST'}).then(r=>r.json()).then(d=>{alert(d.msg);location.reload()})" class="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg shadow">❌ 반려 (취소)</button>
+                    <button onclick="api('/api/approve','POST').then(d=>{alert(d.msg);location.reload()})" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow">✅ 승인 (주문 전송)</button>
+                    <button onclick="api('/api/reject','POST').then(d=>{alert(d.msg);location.reload()})" class="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg shadow">❌ 반려 (취소)</button>
                 </div>
             </div>
         </div>
@@ -53,9 +66,22 @@
         </div>
     </div>
     <script>
-        fetch('/api/state').then(r=>r.json()).then(d=>{
+        // Every /api call sends the dashboard token. Asked once, kept for this browser tab only.
+        function api(path, method){
+            let t = sessionStorage.getItem('dashToken');
+            if(!t){ t = prompt('대시보드 토큰을 입력하세요'); if(!t) return Promise.reject('no token'); sessionStorage.setItem('dashToken', t); }
+            return fetch(path,{method:method||'GET',headers:{'X-Dashboard-Token':t}}).then(r=>{
+                if(r.status===401){ sessionStorage.removeItem('dashToken'); alert('토큰이 틀렸습니다. 다시 시도하세요.'); throw new Error('unauthorized'); }
+                return r.json();
+            });
+        }
+        api('/api/state').then(d=>{
             const b = document.getElementById('mBtn');
             if(d.mode==='AUTO'){b.innerText='완전 자동 모드 (AUTO)';b.className='px-4 py-2 bg-emerald-600 font-bold rounded-lg text-sm shadow';}
+            if(d.git_validation) {
+                document.getElementById('gitSyncTime').innerText = d.git_validation.last_sync;
+                document.getElementById('gitValStatus').innerText = d.git_validation.status;
+            }
         });
     </script>
 </body>
