@@ -1,0 +1,20 @@
+# Fixed risk rules (docs/spec.md §6). Read-only at runtime.
+# Changing a number here is a rule change: it needs user approval.
+# Percent values are percentages (15 = 15%).
+
+max_drawdown_pct = 15        # from peak equity → no new buys until the user resets
+daily_loss_pct = 2           # from today's starting equity → no new buys today
+risk_per_trade_pct = 1       # (entry − stop) × qty ≤ this share of equity
+max_weight_pct = 20          # position value after the buy ≤ this share of equity
+max_positions = 5
+entry_start = "09:05"        # new buys only inside this window (KST)
+entry_end = "15:10"
+near_limit_pct = 3           # no buys within this distance of 상한가/하한가
+max_price_deviation_pct = 3  # limit price must be within this of the last price
+earnings_block_days = 5      # no buys within this many trading days before earnings
+kill_switch_file = "STOP"    # relative to the project root; if it exists → no orders at all
+
+[costs]
+# 미검증: confirm against KIS fees and the current KRX securities transaction tax before stage 5.
+commission_pct = 0.015       # per side
+sell_tax_pct = 0.20          # on sells only
