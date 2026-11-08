@@ -57,7 +57,7 @@ Kelly sizing: **not used** until at least 200 paper trades give calibrated proba
 
 ## 7. Approval gates
 - Development: each of the 6 stages needs user approval.
-- Trading: MANUAL mode (every order approved in the dashboard or Telegram) is the default. AUTO is allowed **only on the paper server**, and on live only after Gate 6.
+- Trading: MANUAL mode (every new entry approved in the dashboard or Telegram) is the default. Exit sells (15:15 flatten, hard stop) do not wait for approval but still pass the guard (approved 2026-11-08). AUTO is allowed **only on the paper server**, and on live only after Gate 6.
 - Rule changes from the nightly review are proposals; they apply only after user approval.
 
 ## 8. Nightly review (16:00 KST)
