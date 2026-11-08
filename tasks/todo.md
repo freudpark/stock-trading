@@ -18,8 +18,18 @@ Apply the quant-agent prompt's principles to Korean stocks: first fix security h
 2. [x] Architecture: `docs/architecture.md` v0.2 approved 2026-11-05 (Gate 2). Risk per trade stays 1%; v2 pullback strategy deferred.
 3. [x] Plan: this file, section "Stage 3 plan" below. Approved 2026-11-05 (Gate 3), D1–D4 as proposed.
 4. [x] Test-first implementation (order in 3.2). Done 2026-11-08, 182 tests pass. Approved 2026-11-08 (Gate 4).
-5. [ ] Review: backtest with no look-ahead (`backtest/`), security review
+5. [~] Review: backtest with no look-ahead (`backtest/`), security review (plan below; D4 = Yahoo daily bars, approved 2026-11-08). Done 2026-11-08: **v1 fails gate 1** (docs/backtest.md). Waiting for the user's choice of next step.
 6. [ ] Ship: KIS paper trading for 1–3 months, then small live
+
+## Stage 5 plan
+Goal: show, with real KRX daily bars and costs, whether v1 has positive expectancy, without look-ahead; then a security review.
+1. [x] `marketdata/yahoo_daily.py`: stdlib fetch of ~3 years of daily bars (`.KS`/`.KQ`), cached in `var/cache/`, split/dividend-adjusted via adjclose, days with |move| > 30% or bad OHLC flagged and dropped. Tests on a saved sample response (no network in tests).
+2. [x] `backtest/daily.py`: day-by-day replay reusing screener, regime, risk state, sizing, ticks, guard numbers (5 positions, 20% weight, 1% risk, 2% daily, 15% drawdown, near-limit) and costs. Daily-bar rules, conservative: entry at max(target, open) + 1 tick when high ≥ target; stop −2% (exit 1 tick worse) if low ≤ stop, assumed to happen whenever touched; else exit at close. Order-book point unknown in daily bars → run two variants (book point always / never). Earnings block not applied (no data).
+3. [x] Tests for step 2: look-ahead (bars after the day raise), stop-before-close, gap-open entry, costs, position cap, drawdown halt.
+4. [x] Run on 20 liquid KOSPI200/KOSDAQ150 names, 3 years; report expectancy R, max losing streak, hit rate, max drawdown, total return, per-year, both variants → `var/backtest/` + summary in docs/backtest.md.
+5. [x] Security review of the whole repo (secrets, network calls, input handling, dashboard, file paths); fix or list findings.
+Verify: unittest passes; backtest run completes and numbers are reproducible from cache; a test proves no future bar is used.
+Known bias: the stock list is picked today (survivorship bias) → results are optimistic; say so in the report.
 
 ## Stage 3 plan
 
@@ -69,3 +79,5 @@ Not in stage 4: `broker/kis_client.py` (no account), `brain/daily_filter.py`, Op
 - Stage 4 step 11 (2026-11-08): config/settings.toml + core/config.py (fail closed; KRX holidays split confirmed / 미검증, both treated as closed); engine/day.py DayRunner (screen → quotes → approvals, stops, entries → 15:15 flatten → review); engine/sample.py made-up sample day; main.py (`simulate`, `--notify`, `--out`, `reset-peak`); notify/telegram.py (chunked, token never in errors); broker protocol gained get_fills; breakout entry now pays the ask so it can fill. Verify 3.3 all met: sample day buys only 09:05–15:10, flat after 15:15, every step journaled, report written; STOP mid-day blocks buys; MANUAL declined → no trades. 182 tests pass.
   Telegram test send of the sample report: sent OK 2026-11-08. Not verified: real market data (sample day is made up), first-trading-day 10:00 open not handled.
 - Gate 2 (2026-11-05): architecture v0.2 approved; spec §6 file name corrected from limits.yaml to limits.toml to match the architecture.
+- Stage 5 (2026-11-08): Yahoo daily fetcher (cache, bad-row filter), daily backtest with two stop rules (pessimistic/path) and two quality variants, research mode without drawdown stops, start_peak option. 201 tests pass. Result: negative expectancy in every variant and every year (path/lead-only −0.07R, costs ≈ 0.11R/trade); with live rules trading stops for good at the 11.25% drawdown "near limit". Details docs/backtest.md.
+  Security review: no secrets or personal data tracked or in history; dashboards bind 127.0.0.1 with constant-time token checks; Telegram errors never include the token; no shell/eval/pickle. Findings: legacy stock_selector.py requests.get has no timeout (left as is until stage 6, by architecture); ~/lynch_check ticker was not validated before building URLs → fixed (regex, BRK.B → BRK-B).
