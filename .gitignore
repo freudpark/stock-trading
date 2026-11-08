@@ -33,3 +33,7 @@ Thumbs.db
 .env.test.local
 .env.production.local
 .env
+
+# stock_bot runtime output
+data/screen/
+STOP
