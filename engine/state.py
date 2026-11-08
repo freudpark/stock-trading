@@ -78,6 +78,7 @@ def build_snapshot(symbol: str, as_of: datetime, quote: Quote, bars: Sequence[Ba
         equity=account.equity,
         drawdown_pct=(peak - account.equity) / peak * HUNDRED if peak > 0 else Decimal(0),
         daily_pnl_pct=(account.equity - start) / start * HUNDRED if start > 0 else Decimal(0),
+        ask=quote.ask,
     )
 
 

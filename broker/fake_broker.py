@@ -111,8 +111,10 @@ class FakeBroker:
     def open_orders(self) -> list[Order]:
         return [o for o in self._orders.values() if o.status is OrderStatus.OPEN]
 
-    def fills(self) -> list[Fill]:
+    def get_fills(self) -> list[Fill]:
         return list(self._fills)
+
+    fills = get_fills
 
     # ---- internals ----
     def _reserved_cash(self, o: Order) -> Decimal:

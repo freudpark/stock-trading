@@ -37,3 +37,4 @@ Thumbs.db
 # stock_bot runtime output
 data/screen/
 STOP
+var/

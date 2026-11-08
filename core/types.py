@@ -87,6 +87,7 @@ class Snapshot:
     equity: Decimal
     drawdown_pct: Decimal        # from peak, %
     daily_pnl_pct: Decimal       # vs today's starting equity, %
+    ask: Decimal | None = None   # best ask; a breakout buy must pay it to fill
 
 
 @dataclass(frozen=True)

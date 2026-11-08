@@ -1,0 +1,29 @@
+# stock_bot runtime settings. Risk numbers live in risk/limits.toml, not here.
+
+broker = "fake"          # fake | paper | live   (paper/live need broker/kis_client.py, not built yet)
+order_mode = "auto"      # manual | auto  (auto is refused on live)
+starting_cash = 10000000 # fake broker only (KRW)
+
+[paths]                  # relative to the project root
+journal = "var/journal"
+reports = "var/reports"
+screen = "data/screen"
+equity_state = "var/equity.json"
+earnings = "data/earnings_manual.json"   # {"005930": "2026-01-29", ...}; optional (todo D2)
+
+[schedule]               # KST
+screen = "08:00"
+flatten = "15:15"
+review = "16:00"
+
+[calendar]
+# KRX market holidays (weekends are closed anyway).
+# Confirmed (2026-11-08, news sources): 1/1, 설 2/16-18, 지방선거 6/3, 제헌절 7/17, 연말 12/31.
+holidays_confirmed = ["2026-01-01", "2026-02-16", "2026-02-17", "2026-02-18",
+                      "2026-06-03", "2026-07-17", "2026-12-31"]
+# 미검증: public holidays and substitute days from memory. Treated as closed (safe side:
+# a wrong entry only skips a trading day). Confirm against the KRX notice before live trading.
+holidays_unverified = ["2026-03-02", "2026-05-01", "2026-05-05", "2026-05-25", "2026-08-17",
+                       "2026-09-24", "2026-09-25", "2026-09-28", "2026-10-05", "2026-10-09",
+                       "2026-12-25"]
+# Not handled yet: the first trading day of the year opens at 10:00, not 09:00.

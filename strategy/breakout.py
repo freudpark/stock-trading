@@ -86,7 +86,7 @@ class BreakoutStrategy:
         if s.position_qty > 0:
             return neutral("already holding", quality, target)
 
-        entry = ticks.round_up(s.last)
+        entry = ticks.round_up(max(s.last, s.ask) if s.ask is not None else s.last)  # pay the ask to fill
         stop = ticks.round_down(entry * (1 - HARD_STOP))
         return Signal(s.symbol, s.as_of, regime, Direction.LONG, quality, rs, tuple(reasons),
                       target_price=target, entry_price=entry, stop_price=stop, avoid=avoid)

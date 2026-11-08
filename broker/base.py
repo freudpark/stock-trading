@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from core.types import Balance, Bar, Order, OrderIntent, Position, Quote, StatusFlags
+from core.types import Balance, Bar, Fill, Order, OrderIntent, Position, Quote, StatusFlags
 
 
 @runtime_checkable
@@ -30,3 +30,7 @@ class Broker(Protocol):
     def get_order(self, client_order_id: str) -> Order: ...
 
     def open_orders(self) -> list[Order]: ...
+
+    def get_fills(self) -> list[Fill]:
+        """Today's fills, oldest first."""
+        ...

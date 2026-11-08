@@ -81,6 +81,10 @@ class BreakoutTest(unittest.TestCase):
         self.assertEqual(sig.stop_price, D("50100"))         # 51,200 × 0.98 = 50,176 → 50,100
         self.assertTrue(sig.should_enter)
 
+    def test_entry_pays_the_ask(self):
+        sig = self.run_(snap(ask=D("51300")))
+        self.assertEqual(sig.entry_price, D("51300"))
+
     def test_no_breakout(self):
         sig = self.run_(snap(last=D("50900")))
         self.assertEqual((sig.direction, sig.quality), (Direction.NEUTRAL, 0))
