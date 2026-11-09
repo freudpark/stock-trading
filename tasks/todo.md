@@ -21,6 +21,10 @@ Apply the quant-agent prompt's principles to Korean stocks: first fix security h
 5. [~] Review: backtest with no look-ahead (`backtest/`), security review (plan below; D4 = Yahoo daily bars, approved 2026-11-08). Done 2026-11-08: **v1 fails gate 1** (docs/backtest.md). Waiting for the user's choice of next step.
 6. [ ] Ship: KIS paper trading for 1–3 months, then small live
 
+## Waiting for the user (2026-11-08)
+- Next direction after v1 failed gate 1 (docs/backtest.md): (1) test the v2 pullback strategy with the same harness (spec change: overnight), (2) tune v1 with a held-out period, (3) in any case decide the 11.25% drawdown "near limit" behavior (today it stops trading forever).
+- lennney/stop-that-shit: analysed, not installed; working rules adopted into ./CLAUDE.md. Ask: delete the clone ~/lab/stop-that-shit?
+
 ## Stage 5 plan
 Goal: show, with real KRX daily bars and costs, whether v1 has positive expectancy, without look-ahead; then a security review.
 1. [x] `marketdata/yahoo_daily.py`: stdlib fetch of ~3 years of daily bars (`.KS`/`.KQ`), cached in `var/cache/`, split/dividend-adjusted via adjclose, days with |move| > 30% or bad OHLC flagged and dropped. Tests on a saved sample response (no network in tests).
