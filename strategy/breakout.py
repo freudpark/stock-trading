@@ -8,7 +8,8 @@ Signal quality (starting values, tuned by backtest in stage 5, then approved):
   +1 trend class Lead                (cap 3); Lag is never traded long
 Regime from watchlist breadth (todo D1); a stock whose range today exceeds 2 × ADR
 is 고변동 unless the market is in 위기.
-Risk state: 75% of a loss limit → 한도근접, at the limit → 축소.
+Risk state: daily loss ≥ 75% of its limit, or drawdown at the halt → 한도근접 (no entry);
+drawdown ≥ 75% of the halt → 축소 (entry allowed at the reduced risk per trade, spec §6).
 """
 from __future__ import annotations
 
@@ -16,14 +17,13 @@ from decimal import Decimal
 
 from core import ticks
 from core.types import Direction, Regime, RiskState, Snapshot, TrendClass
-from risk.guard import Limits
+from risk.guard import NEAR_LIMIT_SHARE, Limits
 from strategy.schema import Signal
 
 K = Decimal("0.5")
 HARD_STOP = Decimal("0.02")          # −2% from entry
 MAX_SPREAD_BPS = Decimal(30)
 VOLATILE_ADR_MULT = Decimal(2)
-NEAR_LIMIT_SHARE = Decimal("0.75")
 
 
 def market_regime(breadth_now: Decimal | None, breadth_5d_ago: Decimal | None) -> Regime:
@@ -38,14 +38,18 @@ def market_regime(breadth_now: Decimal | None, breadth_5d_ago: Decimal | None) -
     return Regime.TREND
 
 
-def risk_state(s: Snapshot, limits: Limits) -> RiskState:
-    daily_loss = -s.daily_pnl_pct / 100      # positive when losing
-    dd = s.drawdown_pct / 100
-    if daily_loss >= limits.daily_loss or dd >= limits.max_drawdown:
-        return RiskState.REDUCE
-    if daily_loss >= limits.daily_loss * NEAR_LIMIT_SHARE or dd >= limits.max_drawdown * NEAR_LIMIT_SHARE:
+def risk_state_from(daily_pnl_pct: Decimal, drawdown_pct: Decimal, limits: Limits) -> RiskState:
+    daily_loss = -daily_pnl_pct / 100      # positive when losing
+    dd = drawdown_pct / 100
+    if daily_loss >= limits.daily_loss * NEAR_LIMIT_SHARE or dd >= limits.max_drawdown:
         return RiskState.NEAR_LIMIT
+    if dd >= limits.max_drawdown * NEAR_LIMIT_SHARE:
+        return RiskState.REDUCE
     return RiskState.SAFE
+
+
+def risk_state(s: Snapshot, limits: Limits) -> RiskState:
+    return risk_state_from(s.daily_pnl_pct, s.drawdown_pct, limits)
 
 
 class BreakoutStrategy:

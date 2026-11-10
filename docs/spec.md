@@ -44,6 +44,7 @@ Volatility breakout (existing logic): target = today open + (prev high − prev 
 | Max drawdown from peak equity | 15% → halt all trading until the user resets |
 | Daily loss limit | 2% of equity → no new orders today |
 | Risk per trade | 1% of equity (size = 1% ÷ stop distance) |
+| Reduced risk (approved 2026-11-09) | drawdown ≥ 75% of the halt (11.25%) → risk state 축소: keep trading at 0.2% risk per trade (approved 2026-11-10; 0.5% changed nothing because the 20% weight cap already binds with the −2% stop, so the real risk is 0.4%; 0.2% ≈ 10% weight, half the normal size); the 15% halt still stops everything until the user resets. Replaces the earlier "no entry near the limit", which stopped trading forever (docs/backtest.md) |
 | Max weight per stock | 20% of equity |
 | Max open positions | 5 |
 | Kill switch | if file `~/stock_bot/STOP` exists → no orders, cancel open orders |

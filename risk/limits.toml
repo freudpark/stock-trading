@@ -5,6 +5,7 @@
 max_drawdown_pct = 15        # from peak equity → no new buys until the user resets
 daily_loss_pct = 2           # from today's starting equity → no new buys today
 risk_per_trade_pct = 1       # (entry − stop) × qty ≤ this share of equity
+reduced_risk_per_trade_pct = 0.2  # used in risk state 축소 (drawdown ≥ 75% of max_drawdown_pct)
 max_weight_pct = 20          # position value after the buy ≤ this share of equity
 max_positions = 5
 entry_start = "09:05"        # new buys only inside this window (KST)

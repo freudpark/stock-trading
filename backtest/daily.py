@@ -10,7 +10,8 @@ rules lean pessimistic:
               price is the close; down day moves open→high→low→close, so it is the low;
     a stop exits 1 tick below the stop price;
   - otherwise exit at the close minus 1 tick (stands in for the 15:15 flatten);
-  - candidates are taken in screener rank order; the daily loss limit stops later entries.
+  - candidates are taken in screener rank order; the daily loss limit stops later entries;
+  - drawdown ≥ 75% of the halt → 축소: trades continue at the reduced risk; the halt stops all.
 Not modelled: earnings block (no data), VI/halts, order-book quality (two variants instead).
 No look-ahead: the screen for day d sees only bars dated before d (screen() also checks).
 """
@@ -99,10 +100,7 @@ def run_backtest(universe: Mapping[str, Sequence[Bar]], limits: Limits, start_eq
             skip("regime 위기")
             curve.append((d, cash))
             continue
-        if drawdown_stops and dd >= limits.max_drawdown * NEAR_LIMIT_SHARE:
-            skip("risk state not 안전 (drawdown)")
-            curve.append((d, cash))
-            continue
+        reduced = drawdown_stops and dd >= limits.max_drawdown * NEAR_LIMIT_SHARE   # 축소: reduced risk
 
         open_count = 0
         invested = Decimal(0)
@@ -132,7 +130,7 @@ def run_backtest(universe: Mapping[str, Sequence[Bar]], limits: Limits, start_eq
                 continue
             stop = ticks.round_down(entry * (1 - HARD_STOP))
             free = cash - invested
-            qty = buy_quantity(cash, free, entry, stop, 0, limits)
+            qty = buy_quantity(cash, free, entry, stop, 0, limits, reduced=reduced)
             if qty <= 0:
                 skip("size zero")
                 continue

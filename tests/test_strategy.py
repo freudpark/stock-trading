@@ -58,12 +58,16 @@ class RegimeTest(unittest.TestCase):
 class RiskStateTest(unittest.TestCase):
     def test_states(self):
         self.assertEqual(risk_state(snap(), LIMITS), RiskState.SAFE)
-        # 75% of the 2% daily limit = −1.5%
+        # 75% of the 2% daily limit = −1.5% → no entry today
         self.assertEqual(risk_state(snap(daily_pnl_pct=D("-1.5")), LIMITS), RiskState.NEAR_LIMIT)
-        self.assertEqual(risk_state(snap(daily_pnl_pct=D("-2")), LIMITS), RiskState.REDUCE)
-        # 75% of the 15% drawdown = 11.25%
-        self.assertEqual(risk_state(snap(drawdown_pct=D("11.25")), LIMITS), RiskState.NEAR_LIMIT)
-        self.assertEqual(risk_state(snap(drawdown_pct=D("15")), LIMITS), RiskState.REDUCE)
+        self.assertEqual(risk_state(snap(daily_pnl_pct=D("-2")), LIMITS), RiskState.NEAR_LIMIT)
+        # 75% of the 15% drawdown = 11.25% → 축소 (trade at reduced risk); at 15% → no entry
+        self.assertEqual(risk_state(snap(drawdown_pct=D("11.24")), LIMITS), RiskState.SAFE)
+        self.assertEqual(risk_state(snap(drawdown_pct=D("11.25")), LIMITS), RiskState.REDUCE)
+        self.assertEqual(risk_state(snap(drawdown_pct=D("15")), LIMITS), RiskState.NEAR_LIMIT)
+        # a daily-loss block wins over 축소
+        self.assertEqual(risk_state(snap(drawdown_pct=D("12"), daily_pnl_pct=D("-1.6")), LIMITS),
+                         RiskState.NEAR_LIMIT)
 
 
 class BreakoutTest(unittest.TestCase):
@@ -122,6 +126,11 @@ class BreakoutTest(unittest.TestCase):
     def test_volatile_does_not_override_crisis(self):
         sig = self.run_(snap(adr_pct=D("2"), day_high=D("52000"), day_low=D("49000")), regime=Regime.CRISIS)
         self.assertEqual(sig.regime, Regime.CRISIS)
+
+    def test_reduce_still_enters(self):
+        sig = self.run_(snap(drawdown_pct=D("12")))
+        self.assertEqual(sig.risk_state, RiskState.REDUCE)
+        self.assertTrue(sig.should_enter)
 
     def test_risk_state_blocks(self):
         sig = self.run_(snap(daily_pnl_pct=D("-1.6")))

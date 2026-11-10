@@ -107,13 +107,13 @@ class CapsTest(unittest.TestCase):
         self.assertEqual(len(r.trades), 4)
         self.assertEqual(r.skipped.get("risk state not 안전 (daily loss)"), 1)
 
-    def test_drawdown_near_limit_blocks_entries(self):
-        # an account already 11.25% below its peak (75% of the 15% halt) takes no new trades
-        peak = (EQ / (1 - D("0.1125"))).quantize(D(1))
-        r = run({"A": series("A", ["win"])}, start_peak=peak)
-        self.assertEqual(r.trades, [])
-        self.assertIsNone(r.halted_on)
-        self.assertEqual(r.skipped.get("risk state not 안전 (drawdown)"), 1)
+    def test_drawdown_near_limit_trades_at_reduced_risk(self):
+        # an account 11.25% below its peak (75% of the 15% halt) keeps trading at 0.2% risk (about half the normal size)
+        normal = run({"A": series("A", ["fade"])}).trades[0]
+        peak = (EQ / (1 - D("0.1125"))).quantize(D(1)) + 1
+        reduced = run({"A": series("A", ["fade"])}, start_peak=peak).trades[0]
+        self.assertLessEqual(reduced.initial_risk, EQ * D("0.002"))
+        self.assertLess(reduced.qty, normal.qty)
 
     def test_research_mode_ignores_drawdown_stops(self):
         peak = (EQ / (1 - D("0.2"))).quantize(D(1))

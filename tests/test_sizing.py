@@ -38,6 +38,17 @@ class SizingTest(unittest.TestCase):
         self.assertEqual(self.size(entry="0"), 0)
         self.assertEqual(self.size(equity="0"), 0)
 
+    def test_reduced_risk_uses_reduced_share(self):
+        # 0.2% of 10,000,000 = 20,000 / 10,000 → 2 shares (normal: 10)
+        self.assertEqual(buy_quantity(D("10000000"), D("10000000"), D("50000"), D("40000"), 0, LIMITS,
+                                      reduced=True), 2)
+
+    def test_reduced_risk_halves_size_with_two_percent_stop(self):
+        # −2% stop: normal size is set by the 20% weight cap (40 shares); 축소 gives 0.2% / 2% = 10% → 20
+        normal = buy_quantity(D("10000000"), D("10000000"), D("50000"), D("49000"), 0, LIMITS)
+        reduced = buy_quantity(D("10000000"), D("10000000"), D("50000"), D("49000"), 0, LIMITS, reduced=True)
+        self.assertEqual((normal, reduced), (40, 20))
+
     def test_sized_order_passes_guard_risk_rule(self):
         q = self.size(stop="47000")
         self.assertLessEqual((D("50000") - D("47000")) * q, D("10000000") * LIMITS.risk_per_trade)

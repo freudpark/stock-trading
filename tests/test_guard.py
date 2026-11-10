@@ -69,8 +69,9 @@ class BaselineTest(GuardTestBase):
 
 class DrawdownTest(GuardTestBase):
     def test_under_limit_passes(self):
-        self.assertPass(BUY, account(equity=D("8600000"), cash=D("8600000"),
-                                     day_start_equity=D("8600000")))
+        # 14% down is 축소, so the buy must fit the reduced risk cap (10 × 1,000 = 10,000 ≤ 0.2%)
+        self.assertPass(replace(BUY, qty=10), account(equity=D("8600000"), cash=D("8600000"),
+                                                      day_start_equity=D("8600000")))
 
     def test_at_limit_blocks_buys_not_exits(self):
         a = account(equity=D("8500000"), cash=D("7500000"),
@@ -97,6 +98,13 @@ class RiskPerTradeTest(GuardTestBase):
 
     def test_over_one_percent_rejected(self):
         self.assertReject(replace(BUY, qty=11, stop_price=D("40000")), reason="risk per trade")
+
+    def test_reduced_risk_in_reduce_state(self):
+        # 12% below peak (≥ 75% of the 15% halt) → 축소, cap 0.2% of 8,800,000 = 17,600:
+        # 1 × 10,000 passes, 2 × 10,000 = 20,000 is rejected
+        a = account(equity=D("8800000"), cash=D("8800000"), day_start_equity=D("8800000"))
+        self.assertPass(replace(BUY, qty=1, stop_price=D("40000")), a)
+        self.assertReject(replace(BUY, qty=2, stop_price=D("40000")), a, reason="risk per trade over 0.2")
 
     def test_buy_without_stop_rejected(self):
         self.assertReject(replace(BUY, stop_price=None), reason="stop")
@@ -273,6 +281,11 @@ class FailClosedTest(unittest.TestCase):
                          ('entry_start = "09:05"', 'entry_start = "9시"')):
             with self.subTest(new=new), self.assertRaises(ConfigError):
                 self._load(LIMITS_TOML.read_text().replace(old, new))
+
+    def test_reduced_risk_above_normal_rejected(self):
+        text = LIMITS_TOML.read_text().replace("reduced_risk_per_trade_pct = 0.2", "reduced_risk_per_trade_pct = 2")
+        with self.assertRaises(ConfigError):
+            self._load(text)
 
     def test_internal_error_rejects(self):
         with tempfile.TemporaryDirectory() as d:

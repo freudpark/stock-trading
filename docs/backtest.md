@@ -41,3 +41,15 @@ Cost split (path / lead-only, research): result before fees and tax +0.04R per t
 1. Stop v1. Test the deferred v2 candidate (EMA-confluence pullback, wider structure stop) with the same harness. Needs a spec change (it holds overnight).
 2. Tune v1 (K, stop width, fewer but higher-quality trades) — risk of overfitting; any change must be validated on a period not used for tuning.
 3. Fix the permanent-stop issue regardless: decide what should happen after the 11.25% block (e.g. halt + user reset, as for 15%).
+
+## Update 2026-11-10: near-limit changed to 축소 (reduced risk)
+Spec §6 now keeps trading past 11.25% drawdown at 0.2% risk per trade (about half size) instead of blocking entries forever. Rerun from cache (`python3 -m backtest.run --offline`, var/backtest/2026-11-11/summary.json):
+
+| variant | trades | exp R | hit | streak | return % | max DD % | halted |
+|---|---|---|---|---|---|---|---|
+| pessimistic/lead-only | 54 | −0.954 | 0.093 | 24 | −15.01 | 15.01 | 2024-03-14 |
+| pessimistic/book | 61 | −0.908 | 0.115 | 22 | −15.51 | 15.51 | 2024-03-14 |
+| path/lead-only | 364 | −0.098 | 0.343 | 13 | −11.24 | 15.15 | 2024-10-18 |
+| path/book | 433 | −0.081 | 0.360 | 13 | −12.25 | 15.10 | 2024-09-30 |
+
+The permanent stop is gone: trading now runs on to the 15% halt, which waits for the user's reset (`python3 main.py reset-peak`), as designed. Research-mode numbers are unchanged. v1 still has negative expectancy, so gate 1 is still failed.

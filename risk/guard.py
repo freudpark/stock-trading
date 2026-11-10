@@ -21,6 +21,7 @@ from core.clock import MarketCalendar, to_kst
 from core.types import Account, GuardResult, OrderIntent, Quote, Side, StatusFlags
 
 HUNDRED = Decimal(100)
+NEAR_LIMIT_SHARE = Decimal("0.75")   # share of a loss limit where 한도근접 / 축소 starts (spec §6)
 
 
 class ConfigError(Exception):
@@ -32,6 +33,7 @@ class Limits:
     max_drawdown: Decimal        # fractions, e.g. 0.15
     daily_loss: Decimal
     risk_per_trade: Decimal
+    reduced_risk_per_trade: Decimal
     max_weight: Decimal
     max_positions: int
     entry_start: time
@@ -58,6 +60,7 @@ _PCT_RANGES = {
     "max_drawdown_pct": (0, 50, False),
     "daily_loss_pct": (0, 10, False),
     "risk_per_trade_pct": (0, 5, False),
+    "reduced_risk_per_trade_pct": (0, 5, False),
     "max_weight_pct": (0, 100, False),
     "near_limit_pct": (0, 30, True),
     "max_price_deviation_pct": (0, 30, False),
@@ -105,6 +108,8 @@ def load_limits(path: Path) -> Limits:
         raise ConfigError("missing [costs] table")
     pct = {k: _number(raw, k, *r) / HUNDRED for k, r in _PCT_RANGES.items()}
     cost = {k: _number(costs, k, *r) / HUNDRED for k, r in _COST_RANGES.items()}
+    if pct["reduced_risk_per_trade_pct"] > pct["risk_per_trade_pct"]:
+        raise ConfigError("reduced_risk_per_trade_pct must not exceed risk_per_trade_pct")
     start, end = _time(raw, "entry_start"), _time(raw, "entry_end")
     if start >= end:
         raise ConfigError("entry_start must be before entry_end")
@@ -115,6 +120,7 @@ def load_limits(path: Path) -> Limits:
         max_drawdown=pct["max_drawdown_pct"],
         daily_loss=pct["daily_loss_pct"],
         risk_per_trade=pct["risk_per_trade_pct"],
+        reduced_risk_per_trade=pct["reduced_risk_per_trade_pct"],
         max_weight=pct["max_weight_pct"],
         max_positions=_int(raw, "max_positions", 1, 50),
         entry_start=start,
@@ -189,8 +195,10 @@ class Guard:
         fails: list[str] = []
         equity = account.equity
 
-        if account.peak_equity > 0 and (account.peak_equity - equity) / account.peak_equity >= L.max_drawdown:
+        dd = (account.peak_equity - equity) / account.peak_equity if account.peak_equity > 0 else Decimal(0)
+        if dd >= L.max_drawdown:
             fails.append("max drawdown reached: no new buys until the user resets")
+        risk_cap = L.reduced_risk_per_trade if dd >= L.max_drawdown * NEAR_LIMIT_SHARE else L.risk_per_trade
         if account.day_start_equity > 0 and (account.day_start_equity - equity) / account.day_start_equity >= L.daily_loss:
             fails.append("daily loss limit reached: no new buys today")
 
@@ -206,8 +214,8 @@ class Guard:
         stop = intent.stop_price
         if stop is None or stop <= 0 or stop >= price:
             fails.append("buy needs a stop price below the entry")
-        elif (price - stop) * intent.qty > equity * L.risk_per_trade:
-            fails.append(f"risk per trade over {L.risk_per_trade * HUNDRED}% of equity")
+        elif (price - stop) * intent.qty > equity * risk_cap:
+            fails.append(f"risk per trade over {(risk_cap * HUNDRED).normalize()}% of equity")
 
         if (held_qty + intent.qty) * price > equity * L.max_weight:
             fails.append(f"weight over {L.max_weight * HUNDRED}% of equity")

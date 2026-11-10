@@ -38,9 +38,9 @@ class Signal:
 
     @property
     def should_enter(self) -> bool:
-        """Spec §5: quality ≥ 2, regime ≠ 위기, risk state 안전, BRAIN not 회피."""
+        """Spec §5–6: quality ≥ 2, regime ≠ 위기, risk state 안전 or 축소 (smaller size), BRAIN not 회피."""
         return (self.direction is Direction.LONG
                 and self.quality >= MIN_QUALITY_TO_ENTER
                 and self.regime is not Regime.CRISIS
-                and self.risk_state is RiskState.SAFE
+                and self.risk_state in (RiskState.SAFE, RiskState.REDUCE)
                 and not self.avoid)

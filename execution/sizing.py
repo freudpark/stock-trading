@@ -11,13 +11,14 @@ def _floor(x: Decimal) -> int:
 
 
 def buy_quantity(equity: Decimal, cash: Decimal, entry: Decimal, stop: Decimal,
-                 held_qty: int, limits: Limits) -> int:
-    """Shares to buy so that (entry − stop) × qty ≤ risk share of equity,
+                 held_qty: int, limits: Limits, reduced: bool = False) -> int:
+    """Shares to buy so that (entry − stop) × qty ≤ risk share of equity (the reduced share in 축소),
     capped by the max weight (including shares already held) and by cash.
     Returns 0 when inputs are invalid or nothing fits."""
     if equity <= 0 or cash <= 0 or entry <= 0 or stop <= 0 or stop >= entry:
         return 0
-    by_risk = _floor(equity * limits.risk_per_trade / (entry - stop))
+    risk = limits.reduced_risk_per_trade if reduced else limits.risk_per_trade
+    by_risk = _floor(equity * risk / (entry - stop))
     by_weight = _floor(equity * limits.max_weight / entry) - held_qty
     by_cash = _floor(cash / (entry * (1 + limits.commission)))
     return max(0, min(by_risk, by_weight, by_cash))

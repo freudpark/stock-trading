@@ -13,7 +13,7 @@ from typing import Callable, Iterable
 
 from broker.base import Broker
 from core.clock import FixedClock, MarketCalendar
-from core.types import Account, OrderIntent, Quote, Side
+from core.types import Account, OrderIntent, Quote, RiskState, Side
 from engine.state import EquityTracker, build_snapshot
 from execution.flatten import flatten_all, stop_exits, stops_from_journal
 from execution.order import OrderService, Pending
@@ -130,13 +130,15 @@ class DayRunner:
                             reasons=sig.reasons)
         if not sig.should_enter:
             return
-        qty = buy_quantity(acct.equity, acct.cash, sig.entry_price, sig.stop_price, 0, self.limits)
+        qty = buy_quantity(acct.equity, acct.cash, sig.entry_price, sig.stop_price, 0, self.limits,
+                           reduced=sig.risk_state is RiskState.REDUCE)
         if qty <= 0:
             self.journal.append("skip", symbol=symbol, reason="size is zero")
             return
         intent = OrderIntent(symbol, Side.BUY, qty, sig.entry_price, sig.stop_price, reason="breakout")
         self.svc.submit(intent, acct, self.ctx(symbol),
-                        meta={"quality": sig.quality, "regime": sig.regime.value, "breadth": self.breadth})
+                        meta={"quality": sig.quality, "regime": sig.regime.value, "breadth": self.breadth,
+                              "risk_state": sig.risk_state.value})
 
     @property
     def strategy(self) -> BreakoutStrategy:

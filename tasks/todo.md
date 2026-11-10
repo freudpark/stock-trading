@@ -22,7 +22,7 @@ Apply the quant-agent prompt's principles to Korean stocks: first fix security h
 6. [ ] Ship: KIS paper trading for 1–3 months, then small live
 
 ## Waiting for the user (2026-11-08)
-- Next direction after v1 failed gate 1 (docs/backtest.md): (1) test the v2 pullback strategy with the same harness (spec change: overnight), (2) tune v1 with a held-out period, (3) in any case decide the 11.25% drawdown "near limit" behavior (today it stops trading forever).
+- Next direction after v1 failed gate 1 (docs/backtest.md): (1) test the v2 pullback strategy with the same harness (spec change: overnight), (2) tune v1 with a held-out period. (3) the 11.25% "near limit" is decided and done (2026-11-10, see Review).
 - lennney/stop-that-shit: analysed, not installed; working rules adopted into ./CLAUDE.md. Ask: delete the clone ~/lab/stop-that-shit?
 
 ## Stage 5 plan
@@ -85,3 +85,4 @@ Not in stage 4: `broker/kis_client.py` (no account), `brain/daily_filter.py`, Op
 - Gate 2 (2026-11-05): architecture v0.2 approved; spec §6 file name corrected from limits.yaml to limits.toml to match the architecture.
 - Stage 5 (2026-11-08): Yahoo daily fetcher (cache, bad-row filter), daily backtest with two stop rules (pessimistic/path) and two quality variants, research mode without drawdown stops, start_peak option. 201 tests pass. Result: negative expectancy in every variant and every year (path/lead-only −0.07R, costs ≈ 0.11R/trade); with live rules trading stops for good at the 11.25% drawdown "near limit". Details docs/backtest.md.
   Security review: no secrets or personal data tracked or in history; dashboards bind 127.0.0.1 with constant-time token checks; Telegram errors never include the token; no shell/eval/pickle. Findings: legacy stock_selector.py requests.get has no timeout (left as is until stage 6, by architecture); ~/lynch_check ticker was not validated before building URLs → fixed (regex, BRK.B → BRK-B).
+- Near-limit fix (approved 2026-11-09, value changed 2026-11-10): drawdown ≥ 11.25% (75% of the 15% halt) → risk state 축소, trading continues at reduced risk instead of stopping forever; daily-loss near limit and the 15% halt still block buys. Found that 0.5% risk changed nothing (with the −2% stop the 20% weight cap already binds, real risk 0.4%), so the user chose 0.2% (≈ 10% weight, half size). The guard now enforces the reduced cap itself (NEAR_LIMIT_SHARE moved to risk/guard.py). 206 tests pass.
