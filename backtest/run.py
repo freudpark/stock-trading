@@ -93,6 +93,7 @@ def main(argv: list[str]) -> int:
                              for y, v in r.per_year.items()},
                 "skipped": r.skipped,
                 "exits": {k: sum(1 for t in r.trades if t.closed_at == k) for k in ("stop", "close")},
+                "curve": [[d.isoformat(), str(eq)] for d, eq in r.equity_curve],
             }
             rows.append((key, s, r))
     dest = ROOT / "var" / "backtest" / now.date().isoformat()

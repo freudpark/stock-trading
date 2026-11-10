@@ -86,3 +86,12 @@ Not in stage 4: `broker/kis_client.py` (no account), `brain/daily_filter.py`, Op
 - Stage 5 (2026-11-08): Yahoo daily fetcher (cache, bad-row filter), daily backtest with two stop rules (pessimistic/path) and two quality variants, research mode without drawdown stops, start_peak option. 201 tests pass. Result: negative expectancy in every variant and every year (path/lead-only −0.07R, costs ≈ 0.11R/trade); with live rules trading stops for good at the 11.25% drawdown "near limit". Details docs/backtest.md.
   Security review: no secrets or personal data tracked or in history; dashboards bind 127.0.0.1 with constant-time token checks; Telegram errors never include the token; no shell/eval/pickle. Findings: legacy stock_selector.py requests.get has no timeout (left as is until stage 6, by architecture); ~/lynch_check ticker was not validated before building URLs → fixed (regex, BRK.B → BRK-B).
 - Near-limit fix (approved 2026-11-09, value changed 2026-11-10): drawdown ≥ 11.25% (75% of the 15% halt) → risk state 축소, trading continues at reduced risk instead of stopping forever; daily-loss near limit and the 15% halt still block buys. Found that 0.5% risk changed nothing (with the −2% stop the 20% weight cap already binds, real risk 0.4%), so the user chose 0.2% (≈ 10% weight, half size). The guard now enforces the reduced cap itself (NEAR_LIMIT_SHARE moved to risk/guard.py). 206 tests pass.
+
+## Status page for stock_bot (requested 2026-11-10)
+Goal: one Korean page (hub, http://127.0.0.1:8090/stock) that shows the goal, current stage, next steps, decisions waiting, backtest results with an equity chart, the latest simulated day and guard rejections.
+- [x] `tasks/status_ko.json`: plain-Korean summary kept up to date by Claude (goal, stages, next steps, waiting decisions)
+- [x] `backtest/run.py`: also save each variant's equity curve in summary.json (for the chart); rerun from cache
+- [x] `~/hub/stock_page.py` + route `/stock` and a link from the hub's stock card; reads only files, no new dependency
+- [x] `main.py simulate --out var/sim` keeps the latest simulated day for the page
+Verify: unittest passes; hub serves /stock with 200; screenshot checked at phone width.
+Review (2026-11-10): page live at /stock; backtest rerun from cache gives the same numbers as before plus equity curves; all sections render (checked as text). Not checked: visual look on the phone screen (no browser tool on the phone).

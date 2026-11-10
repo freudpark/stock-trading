@@ -5,7 +5,8 @@ Korean-stock trading bot (KOSPI/KOSDAQ): code rules decide, a fixed risk guard c
 ## Resume here
 1. Read `tasks/todo.md` (stage status, decisions waiting for the user, review log) and `tasks/lessons.md` if present.
 2. `git status` and `git log -5`; then continue the first unchecked item or ask the pending decision listed in todo.md.
-3. Approved documents: `docs/spec.md` (rules), `docs/architecture.md` (modules), `docs/backtest.md` (stage 5 results).
+3. Status page for the user: http://127.0.0.1:8090/stock (`~/hub/stock_page.py`). Update `tasks/status_ko.json` (plain Korean) whenever a stage, decision or result changes; after a simulated day worth showing, run `python3 main.py simulate --out var/sim`.
+4. Approved documents: `docs/spec.md` (rules), `docs/architecture.md` (modules), `docs/backtest.md` (stage 5 results).
 
 ## Commands
 - Tests (stdlib only, no pip): `python3 -m unittest discover tests`
